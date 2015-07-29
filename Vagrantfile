@@ -76,6 +76,7 @@ Vagrant.configure(2) do |config|
     v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
     v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
     v.memory = 2048
+    v.cpus = 4
   end
 end
 

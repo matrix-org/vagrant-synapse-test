@@ -7,7 +7,12 @@ Usage:
 from docopt import docopt
 from twisted.internet import defer, reactor
 import treq
+import time
 import random
+
+
+def get_time():
+    return int(time.time() * 1000)
 
 
 def sleep(seconds):
@@ -21,10 +26,10 @@ def start_streaming(host, user):
     print "Initial Sync for testuser_%d" % (user,)
 
     r = yield treq.get(
-        "%s/_matrix/client/api/v1/initialSync" % (host,),
+        "%s/_matrix/client/api/v1/events" % (host,),
         params={
             "access_token": "token_%d" % (user,),
-            "limit": "0",
+            "timeout": "0",
         },
     )
 
@@ -39,20 +44,29 @@ def start_streaming(host, user):
     print "Starting event stream for testuser_%d" % (user,)
 
     while True:
-        r = yield treq.get(
-            "%s/_matrix/client/api/v1/events" % (host,),
-            params={
-                "access_token": "token_%d" % (user,),
-                "from": from_token,
-                "timeout": "30000",
-            },
-        )
+        try:
+            start = get_time()
+            r = yield treq.get(
+                "%s/_matrix/client/api/v1/events" % (host,),
+                params={
+                    "access_token": "token_%d" % (user,),
+                    "from": from_token,
+                    "timeout": "30000",
+                },
+            )
+            end = get_time()
 
-        stream = yield r.json()
+            stream = yield r.json()
 
-        assert r.code == 200, "Event stream %d. %r" % (r.code, stream,)
+            assert r.code == 200, "Event stream %d. %r" % (r.code, stream,)
 
-        from_token = stream["end"]
+            if end - start > 35000:
+                print "Took more than %ds to get response" % ((end-start)/1000,)
+
+            from_token = stream["end"]
+        except Exception as e:
+            print "Failed to do event stream for %d: %s" % (user, e)
+            yield sleep(5)
 
 
 @defer.inlineCallbacks
@@ -61,9 +75,11 @@ def start(url, users):
     sleep_ts = max(30./users, 0.5)
     for user in xrange(users):
         start_streaming(url, user)
-        yield sleep(sleep_ts)
+#        yield sleep(sleep_ts)
 
-    print "All initial syncs started"
+    #print "All initial syncs started"
+    yield
+    defer.returnValue(None)
 
 
 if __name__ == "__main__":
