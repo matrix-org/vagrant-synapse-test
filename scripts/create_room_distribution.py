@@ -43,11 +43,9 @@ if __name__ == '__main__':
         return r
 
     for room, n in enumerate(room_to_num_users):
-        print "Room %d with %d members." % (room, n,)
         for _ in xrange(n):
             user = get_user_for_room(room)
             result[room]["users"].add(user)
-        print "Room %d done." % (room,)
 
     print yaml.dump([
         {"users": list(r["users"])}
