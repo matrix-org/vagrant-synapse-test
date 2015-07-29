@@ -1,0 +1,91 @@
+# vim:ft=yaml
+tls_certificate_path: "/home/synapse/config/localhost.tls.crt"
+tls_private_key_path: "/home/synapse/config/localhost.tls.key"
+tls_dh_params_path: "/home/synapse/config/localhost.tls.dh"
+
+no_tls: False
+
+
+## Server ##
+
+server_name: "localhost"
+pid_file: /home/synapse/config/homeserver.pid
+web_client: True
+soft_file_limit: 0
+
+listeners:
+  - port: 8448
+    bind_address: ''
+    type: http
+    tls: true
+    x_forwarded: false
+    resources:
+      - names:
+          - client
+          - webclient
+        compress: true
+      - names: [federation]
+        compress: false
+
+  - port: 8008
+    tls: false
+    bind_address: ''
+    type: http
+
+    x_forwarded: false
+
+    resources:
+      - names: [client, webclient]
+        compress: true
+      - names: [federation]
+        compress: false
+
+  - port: 9000
+    bind_address: 127.0.0.1
+    type: manhole
+
+
+database:
+  name: "psycopg2"
+  args:
+    database: synapse
+
+event_cache_size: "10K"
+
+log_config: "/home/synapse/config/logging.yaml"
+
+
+rc_messages_per_second: 0.2
+rc_message_burst_count: 10.0
+
+federation_rc_window_size: 1000
+federation_rc_sleep_limit: 10
+federation_rc_sleep_delay: 500
+federation_rc_reject_limit: 50
+federation_rc_concurrent: 3
+
+media_store_path: "/home/synapse/config/media_store"
+uploads_path: "/home/synapse/config/uploads"
+
+max_upload_size: "10M"
+max_image_pixels: "32M"
+
+recaptcha_private_key: "YOUR_PRIVATE_KEY"
+recaptcha_public_key: "YOUR_PUBLIC_KEY"
+enable_registration_captcha: False
+recaptcha_siteverify_api: "https://www.google.com/recaptcha/api/siteverify"
+
+turn_uris: []
+turn_shared_secret: "YOUR_SHARED_SECRET"
+turn_user_lifetime: "1h"
+
+enable_registration: False
+registration_shared_secret: "foobar"
+
+enable_metrics: True
+app_service_config_files: []
+
+signing_key_path: "/home/synapse/config/localhost.signing.key"
+old_signing_keys: {}
+
+key_refresh_interval: "1d"
