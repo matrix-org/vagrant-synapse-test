@@ -37,13 +37,14 @@ listeners:
     resources:
       - names: [client, webclient]
         compress: true
-      - names: [federation]
+      - names: [federation, metrics]
         compress: false
 
   - port: 9000
     bind_address: 127.0.0.1
     type: manhole
 
+enable_metrics: True
 
 database:
   name: "psycopg2"
@@ -55,8 +56,8 @@ event_cache_size: "10K"
 log_config: "/home/synapse/config/logging.yaml"
 
 
-rc_messages_per_second: 0.2
-rc_message_burst_count: 10.0
+rc_messages_per_second: 200000
+rc_message_burst_count: 100000
 
 federation_rc_window_size: 1000
 federation_rc_sleep_limit: 10

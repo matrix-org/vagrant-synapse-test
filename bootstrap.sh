@@ -75,7 +75,39 @@ then
     cp ~/homeserver.yaml .
     cp ~/logging.yaml .
 fi
+PYTHONPATH=/mnt/synapse python -m synapse.app.homeserver --generate-keys -c homeserver.yaml
 python /mnt/synapse/synctl start
 EOF
+
+echo "Provisioning prometheus..."
+
+apt-get -y install git
+
+if [ ! `id -u prometheus` ];
+then
+    adduser --disabled-password --gecos "" prometheus
+    cp /vagrant/prometheus* ~prometheus/
+    chmod a+r ~prometheus/prometheus*
+    su - prometheus <<EOF
+mkdir -p log
+git clone "https://github.com/prometheus/prometheus.git"
+cd prometheus
+git checkout 0.15.1
+make build
+cd ~
+git clone "https://github.com/matrix-org/synapse-prometheus-config.git"
+cd "synapse-prometheus-config"
+ln -s ~/prometheus/console_libraries
+cp ~prometheus/prometheus.yaml .
+cp ~prometheus/prometheus-start.sh start.sh
+cp ~prometheus/prometheus-stop.sh stop.sh
+chmod a+x start.sh stop.sh
+mkdir -p consoles
+cd consoles
+ln -s ../synapse.html
+cd ..
+./start.sh
+EOF
+fi
 
 echo "Finished provisioning"
