@@ -30,7 +30,8 @@ def get_time():
 def send_messages(host, user_to_rooms, interval):
     while True:
         user, rooms = random.choice(user_to_rooms.items())
-        room_id = random.choice(rooms)
+        room = random.choice(rooms)
+        room_id = room["room_id"]
 
         start = get_time()
 
@@ -61,7 +62,7 @@ def send_messages(host, user_to_rooms, interval):
         else:
             rate = 0
 
-        print "Sent from %d into %s. Rate: %.2f/s. Latency: %dms" % (user, room_id, rate, end-start)
+        print "Sent from %d into %s. Rate: %.2f/s. Latency: %dms" % (user, room["alias"], rate, end-start)
 
         yield sleep(interval * random.uniform(0.7, 1.3) / 1000.)
 
@@ -72,7 +73,7 @@ def start(url, rooms, interval, concurrent):
 
     for room in rooms.values():
         for user in room["users"]:
-            user_to_rooms.setdefault(user, []).append(room["room_id"])
+            user_to_rooms.setdefault(user, []).append(room)
 
     ds = []
     for _ in range(concurrent):

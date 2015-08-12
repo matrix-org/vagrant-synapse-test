@@ -46,15 +46,26 @@ def start_streaming(host, user):
     while True:
         try:
             start = get_time()
-            r = yield treq.get(
-                "%s/_matrix/client/api/v1/events" % (host,),
-                params={
-                    "access_token": "token_%d" % (user,),
-                    "from": from_token,
-                    "timeout": "30000",
-                },
+            r, i = yield defer.DeferredList(
+                [
+                    treq.get(
+                        "%s/_matrix/client/api/v1/events" % (host,),
+                        params={
+                            "access_token": "token_%d" % (user,),
+                            "from": from_token,
+                            "timeout": "30000",
+                        },
+                    ),
+                    sleep(45),
+                ],
+                fireOnOneCallback=True,
             )
             end = get_time()
+
+            if i == 1:
+                # We timedout.
+                print "Cancelled after %ds, retrying" % ((end-start)/1000,)
+                continue
 
             stream = yield r.json()
 
@@ -75,7 +86,7 @@ def start(url, users):
     sleep_ts = max(30./users, 0.5)
     for user in xrange(users):
         start_streaming(url, user)
-#        yield sleep(sleep_ts)
+        yield sleep(sleep_ts)
 
     #print "All initial syncs started"
     yield
